@@ -84,6 +84,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 5000; /* Sits above Home (1000) but below Notification (10000) */
+  pointer-events: none; /* Let clicks pass through empty app wrappers */
 }
 
 /* home screen icon */
@@ -109,7 +111,7 @@ body {
   transform: translateY(20px);
   transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   pointer-events: none;
-  z-index: 1000;
+  z-index: 6000; /* Sit above inactive app wrappers (5000) */
   will-change: transform, opacity;
 }
 
@@ -144,6 +146,7 @@ body {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
   image-rendering: pixelated; /* Keeps pixel art sharp */
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  pointer-events: auto; /* Ensure cassettes are interactable within the rack */
 }
 .cassette:active { cursor: grabbing; }
 .cassette:hover { transform: scale(1.05) translateY(-5px); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)) brightness(1.1); }
@@ -777,75 +780,76 @@ button:hover {
 
 <!-- MUSIC PLAYER APP -->
 <div class="app" style="pointer-events:none;">
-  <div class="music-container" style="display: flex; align-items: center; gap: 20px; pointer-events: none; width: 100%; justify-content: center; height: 100%;">
-    <div class="chat" id="musicPlayer" style="position: relative; background: rgba(10, 15, 28, 0.95); border: 1px solid rgba(251, 113, 133, 0.3); color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.4);">
-    <div class="header" style="border-bottom: 1px solid rgba(251, 113, 133, 0.2);">
-      <div id="backToHomeMusic" style="cursor: pointer; margin-right: 10px; color: #db2777; font-size: 30px; line-height: 1; user-select: none;">‹</div>
-      <div class="pfp" style="background: rgba(251, 113, 133, 0.1); border-color: rgba(251, 113, 133, 0.3);">🎵</div>
-      <div class="header-info">
-        <div class="name" style="color: white;">Music Player</div>
-        <div id="musicStatus" class="status" style="color: rgba(251, 113, 133, 0.8);">Paused</div>
+  <div class="music-container" style="display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center; height: 100%; overflow: visible;">
+    <!-- Main Player Window -->
+    <div class="chat" id="musicPlayer" style="position: relative; background: rgba(10, 15, 28, 0.95); border: 1px solid rgba(251, 113, 133, 0.3); color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.4); flex-shrink: 0;">
+      <div class="header" style="border-bottom: 1px solid rgba(251, 113, 133, 0.2);">
+        <div id="backToHomeMusic" style="cursor: pointer; margin-right: 10px; color: #db2777; font-size: 30px; line-height: 1; user-select: none;">‹</div>
+        <div class="pfp" style="background: rgba(251, 113, 133, 0.1); border-color: rgba(251, 113, 133, 0.3);">🎵</div>
+        <div class="header-info">
+          <div class="name" style="color: white;">Music Player</div>
+          <div id="musicStatus" class="status" style="color: rgba(251, 113, 133, 0.8);">Paused</div>
+        </div>
+        <!-- Library Toggle Button -->
+        <div onclick="toggleLibrary()" style="margin-left: auto; width: 48px; height: 36px; background: rgba(251, 113, 133, 0.15) url('CassetteLibrary.png') no-repeat center; background-size: 28px; border: 1px solid rgba(251, 113, 133, 0.3); border-radius: 10px; cursor: pointer; image-rendering: pixelated; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(251, 113, 133, 0.25) url(\'CassetteLibrary.png\') no-repeat center'; this.style.backgroundSize='28px'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(251, 113, 133, 0.15) url(\'CassetteLibrary.png\') no-repeat center'; this.style.backgroundSize='28px'; this.style.transform='scale(1)'"></div>
       </div>
-      <!-- Library Toggle Button -->
-      <div onclick="toggleLibrary()" style="margin-left: auto; width: 48px; height: 36px; background: rgba(251, 113, 133, 0.15) url('CassetteLibrary.png') no-repeat center; background-size: 28px; border: 1px solid rgba(251, 113, 133, 0.3); border-radius: 10px; cursor: pointer; image-rendering: pixelated; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(251, 113, 133, 0.25) url(\'CassetteLibrary.png\') no-repeat center'; this.style.backgroundSize='28px'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(251, 113, 133, 0.15) url(\'CassetteLibrary.png\') no-repeat center'; this.style.backgroundSize='28px'; this.style.transform='scale(1)'"></div>
-    </div>
-    <div class="messages" style="display: flex; flex-direction: column; align-items: center; padding: 0; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;">
-      <!-- Now Playing Section -->
-      <div id="musicDropZone" style="width: 100%; padding: 20px 12px 24px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid rgba(251, 113, 133, 0.2); background: linear-gradient(to bottom, rgba(251, 113, 133, 0.05), transparent); transition: background 0.3s;">
-        <!-- The Cassette Slot Visual -->
-        <div style="max-width: 320px; width: 100%; aspect-ratio: 320/205; background: #020617; border-radius: 24px; border: 4px solid #1e293b; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
-          <div style="position: absolute; inset: 0; background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.05) 55%, transparent 60%); pointer-events: none;"></div>
-          <div id="cassetteInPlayer" style="display: none; width: 87.5%; height: 85.3%; background-size: contain; background-repeat: no-repeat; background-position: center; transform: translateY(0); transition: transform 0.5s ease-in; position: relative; image-rendering: pixelated; z-index: 1;">
-             <div style="display: flex; justify-content: space-around; padding-top: 80px;">
-               <div class="cassette-wheel" style="width: 34px; height: 34px; border-radius: 50%; border: 4px dashed rgba(255,255,255,0.3); animation: rotate 3s linear infinite; animation-play-state: paused;"></div>
-               <div class="cassette-wheel" style="width: 34px; height: 34px; border-radius: 50%; border: 4px dashed rgba(255,255,255,0.3); animation: rotate 3s linear infinite; animation-play-state: paused;"></div>
-             </div>
+      <div class="messages" style="display: flex; flex-direction: column; align-items: center; padding: 0; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;">
+        <!-- Now Playing Section -->
+        <div id="musicDropZone" style="width: 100%; padding: 20px 12px 24px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid rgba(251, 113, 133, 0.2); background: linear-gradient(to bottom, rgba(251, 113, 133, 0.05), transparent); transition: background 0.3s;">
+          <!-- The Cassette Slot Visual -->
+          <div style="max-width: 320px; width: 100%; aspect-ratio: 320/205; background: #020617; border-radius: 24px; border: 4px solid #1e293b; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
+            <div style="position: absolute; inset: 0; background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.05) 55%, transparent 60%); pointer-events: none;"></div>
+            <div id="cassetteInPlayer" style="display: none; width: 87.5%; height: 85.3%; background-size: contain; background-repeat: no-repeat; background-position: center; transform: translateY(0); transition: transform 0.5s ease-in; position: relative; image-rendering: pixelated; z-index: 1;">
+               <div style="display: flex; justify-content: space-around; padding-top: 80px;">
+                 <div class="cassette-wheel" style="width: 34px; height: 34px; border-radius: 50%; border: 4px dashed rgba(255,255,255,0.3); animation: rotate 3s linear infinite; animation-play-state: paused;"></div>
+                 <div class="cassette-wheel" style="width: 34px; height: 34px; border-radius: 50%; border: 4px dashed rgba(255,255,255,0.3); animation: rotate 3s linear infinite; animation-play-state: paused;"></div>
+               </div>
+            </div>
+            <div class="pfp" style="width: 110px; height: 110px; font-size: 60px; border: none; background: transparent; animation: rotate 15s linear infinite; animation-play-state: paused; opacity: 0.8;" id="albumArt">💿</div>
           </div>
-          <div class="pfp" style="width: 110px; height: 110px; font-size: 60px; border: none; background: transparent; animation: rotate 15s linear infinite; animation-play-state: paused; opacity: 0.8;" id="albumArt">💿</div>
-        </div>
-        <div class="name" id="currentTrackTitle" style="font-size: 1.1rem; font-weight: 800; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; text-shadow: 0 0 10px rgba(251, 113, 133, 0.3);">Take a chance with me</div>
-        <div class="status" id="currentTrackFile" style="font-size: 0.8rem; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(251, 113, 133, 0.8);">NIKI</div>
-        
-        <!-- Progress Bar Section -->
-        <div style="width: 100%; margin-top: 12px; padding: 0 10px;">
-          <input type="range" id="progressBar" value="0" step="0.1" style="width: 100%; accent-color: #fb7185; cursor: pointer;">
-          <div style="display: flex; justify-content: space-between; font-size: 10px; color: #6b7280; margin-top: 6px; font-weight: 600; font-variant-numeric: tabular-nums;">
-            <span id="currentTime">0:00</span>
-            <span id="duration">0:00</span>
+          <div class="name" id="currentTrackTitle" style="font-size: 1.1rem; font-weight: 800; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; text-shadow: 0 0 10px rgba(251, 113, 133, 0.3);">Take a chance with me</div>
+          <div class="status" id="currentTrackFile" style="font-size: 0.8rem; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(251, 113, 133, 0.8);">NIKI</div>
+          
+          <!-- Progress Bar Section -->
+          <div style="width: 100%; margin-top: 12px; padding: 0 10px;">
+            <input type="range" id="progressBar" value="0" step="0.1" style="width: 100%; accent-color: #fb7185; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #6b7280; margin-top: 6px; font-weight: 600; font-variant-numeric: tabular-nums;">
+              <span id="currentTime">0:00</span>
+              <span id="duration">0:00</span>
+            </div>
           </div>
-        </div>
 
-        <!-- Volume Slider -->
-        <div style="width: 70%; margin-top: 12px; padding: 0 10px; display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 12px; opacity: 0.6;">🔈</span>
-          <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" style="flex: 1; accent-color: #fb7185; height: 3px; cursor: pointer;">
-          <span style="font-size: 12px; opacity: 0.6;">🔊</span>
+          <!-- Volume Slider -->
+          <div style="width: 70%; margin-top: 12px; padding: 0 10px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 12px; opacity: 0.6;">🔈</span>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" style="flex: 1; accent-color: #fb7185; height: 3px; cursor: pointer;">
+            <span style="font-size: 12px; opacity: 0.6;">🔊</span>
+          </div>
         </div>
       </div>
-    </div>
-    
-    <div class="inputBar" style="justify-content: center; padding: 15px; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(10px); border: none; border-top: 1px solid rgba(251, 113, 133, 0.2); border-radius: 0; margin: 0; gap: 24px;">
-      <button onclick="prevTrack()" style="background: none; border: none; padding: 0; color: #db2777;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-      </button>
-      <div style="position: relative; width: 75px; height: 75px; display: flex; align-items: center; justify-content: center;">
-        <svg style="position: absolute; transform: rotate(-90deg); width: 75px; height: 75px;">
-          <circle cx="37.5" cy="37.5" r="34" stroke="#fce7f3" stroke-width="4" fill="transparent" />
-          <circle id="buttonProgressCircle" cx="37.5" cy="37.5" r="34" stroke="#fb7185" stroke-width="4" fill="transparent" 
-                  stroke-dasharray="213.6" stroke-dashoffset="213.6" stroke-linecap="round" style="transition: stroke-dashoffset 0.2s linear;" />
-        </svg>
-        <button onclick="toggleMusic()" id="playerPlayBtn" style="position: relative; z-index: 1; margin: 0; padding: 0; background: none; border: none; color: #db2777;">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      
+      <div class="inputBar" style="justify-content: center; padding: 15px; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(10px); border: none; border-top: 1px solid rgba(251, 113, 133, 0.2); border-radius: 0; margin: 0; gap: 24px;">
+        <button onclick="prevTrack()" style="background: none; border: none; padding: 0; color: #db2777;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <div style="position: relative; width: 75px; height: 75px; display: flex; align-items: center; justify-content: center;">
+          <svg style="position: absolute; transform: rotate(-90deg); width: 75px; height: 75px;">
+            <circle cx="37.5" cy="37.5" r="34" stroke="#fce7f3" stroke-width="4" fill="transparent" />
+            <circle id="buttonProgressCircle" cx="37.5" cy="37.5" r="34" stroke="#fb7185" stroke-width="4" fill="transparent" 
+                    stroke-dasharray="213.6" stroke-dashoffset="213.6" stroke-linecap="round" style="transition: stroke-dashoffset 0.2s linear;" />
+          </svg>
+          <button onclick="toggleMusic()" id="playerPlayBtn" style="position: relative; z-index: 1; margin: 0; padding: 0; background: none; border: none; color: #db2777;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+        <button onclick="nextTrack()" style="background: none; border: none; padding: 0; color: #db2777;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"/></svg>
         </button>
       </div>
-      <button onclick="nextTrack()" style="background: none; border: none; padding: 0; color: #db2777;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"/></svg>
-      </button>
     </div>
-  </div>
 
     <!-- Cassette Library Side Panel (Tape Rack) -->
-    <div id="libraryDropdown" class="chat" style="display: none; width: min(320px, 95vw); height: 85vh; padding: 24px; position: relative; transform: translate3d(20px, 0, 0) scale(0.95); opacity: 0; pointer-events: auto; background: linear-gradient(165deg, #0f172a, #1e1b4b); border: 2px solid rgba(251, 113, 133, 0.4); box-shadow: 0 0 50px rgba(0,0,0,0.6); transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s ease;">
+    <div id="libraryDropdown" class="chat" style="display: none; width: min(320px, 95vw); height: 85vh; padding: 24px; position: relative; transform: translate3d(20px, 0, 0) scale(0.95); opacity: 0; background: linear-gradient(165deg, #0f172a, #1e1b4b); border: 2px solid rgba(251, 113, 133, 0.4); box-shadow: 0 0 50px rgba(0,0,0,0.6); transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s ease; flex-shrink: 0;">
       <div style="text-align: center; margin-bottom: 24px;">
         <div style="font-size: 12px; font-weight: 900; color: #fb7185; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 15px rgba(251, 113, 133, 0.6);">Tape Rack</div>
         <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 8px; font-weight: 600;">Drag a tape to the player slot</div>
@@ -856,7 +860,6 @@ button:hover {
     </div>
   </div>
 </div>
-
 <!-- MUSIC -->
 <audio id="music" src="bgmusic.mp3"></audio>
 <audio id="popSound" src="pop.mp3"></audio>
@@ -1126,11 +1129,11 @@ openApp.onclick = async () => {
   galleryApp.classList.remove("active");
   musicPlayer.classList.remove("active");
   document.getElementById("libraryDropdown").style.display = "none";
-  document.getElementById("libraryHint").style.display = "none";
   openGallery.classList.remove("zoomOut");
   openMusic.classList.remove("zoomOut");
 
   notification.classList.remove("show");
+  chat.parentElement.style.pointerEvents = "auto";
   openApp.classList.add("zoomOut");
   bgGradient.className = "bg-gradient bg-messages";
   home.classList.add("dimmed");
@@ -1154,6 +1157,7 @@ openApp.onclick = async () => {
 ========================= */
 backToHome.onclick = () => {
   chat.classList.remove("active");
+  chat.parentElement.style.pointerEvents = "none";
   bgGradient.className = "bg-gradient";
   home.classList.remove("dimmed");
   home.style.pointerEvents = "auto";
@@ -1170,6 +1174,7 @@ openMusic.onclick = () => {
   openApp.classList.remove("zoomOut");
   openGallery.classList.remove("zoomOut");
 
+  musicPlayer.parentElement.parentElement.style.pointerEvents = "auto";
   bgGradient.className = "bg-gradient bg-music";
   home.classList.add("dimmed");
   home.style.pointerEvents = "none";
@@ -1348,7 +1353,14 @@ const photos = [
   "cats.jpg",
   "AIgrad.png"
 ];
-const captions = ["CAP HERE", "CAP HERE", "CAP HERE", "CAP HERE", "CAP HERE", "CAP HERE", "CAP HERE", "CAP HERE"];
+const captions = ["Di pa tayo close neto eh, pero there was this one time na sumama ka samin mag-Divi. Sira pa yung claw machine nun, tapos gusto mo yung isa dun. Sabi ko ayaw ko kasi wala pa naman ako nun eh, pero ang ending, bago ako umuwi, binigay ko rin sayo sabay takbo HAHAHAHAHAHAHA. (Di ko na sure kung eto talaga yung exact one, pero alam ko may binigay talaga ako sayo bago ako umalis)", 
+                  "Close na tayo nito. Si April lang nakakaalam ng feelings ko nun eh, tapos nagulat nalang ako nung sinend niya sakin tong pic. Pero honestly, isa sa mga core memories ko nung SHS yung mga pauwi natin together — whether kumakain sa Centromall, naglalaro sa Divi, or simpleng sabay lang maglakad pauwi.", 
+                  "Naghalungkat na ko sa bahay, nanghiram pa ko sa kapitbahay, pero wala talaga akong mahanap na barong HAHAHAHA. Kaya ang ending di ako nakapunta para makita ka that day 😔. Buti nalang to the rescue si April kasi sinendan niya ko ng picture mo TT", 
+                  "Eto medyo nakakahiya 😭 nahuli ni April na tinatalian mo ng ribbon yung kamay ko, pero syempre kailangan maangas parin kunwari para di mahalata na gustong-gusto ko yung moment na yun :))", 
+                  "Di man halata, pero sobrang na-enjoy ko yung mga bardagulan at bickering natin sa room HAHAHA. Kahit maingay tayo pareho, deadma sa kanila — nag-eenjoy ako makipagkulitan sayo eh.", 
+                  "Nahagip ka ng cam ko nung nag-EK tayo, pero deretso agad sa favorites HAHAHAHAHA. Kahit mabigat buhatin bag mo buong araw, enjoy parin naman ako… ikaw ba naman kasama eh.", 
+                  "Eto yung couple cat keychains na ibibigay ko sana sayo nung muntik na ko mag-confess. Kaso wala… inabutan nanaman ng takot", 
+                  "Eto medyo bittersweet. Nung graduation, nalungkot talaga ako pag-uwi. Syempre isa na dun yung panghihinayang kasi feeling ko di ko na-enjoy to the fullest yung times na magkakasama tayo. Pero yung pinaka nasa isip ko talaga nun was kung masasabi ko pa ba yung feelings ko sayo, kasi after that… baka di na kita masyadong makita ulit."];
 let openedEnvelopes = new Set();
 
 function renderGallery() {
@@ -1385,7 +1397,15 @@ function openLetter(e, index) {
 
 function openSecretLetter() {
   const content = document.getElementById("letterContent");
-  content.innerHTML = "<strong>Dear Bea,</strong><br><br>Put your secret long message here. This is a special spot for something really heartfelt.<br><br>Love, Tora";
+  content.innerHTML = `
+    <strong>Dear Bea,</strong><br><br>
+    Eight of the most memorable moments ko na kasama ka — partly kasi yan lang din yung mga nahanap kong pictures sa gallery HAHAHA. But nevertheless, isa ka talaga sa mga taong hindi ko makakalimutan ever. Kahit magka-dementia pa ko pagtanda, feeling ko maaalala parin kita 😭<br><br>
+    Sobrang into you ko dati to the point na kahit gabi na, di ako mapakali sa higaan kasi gusto kitang makausap o makasama. Pero Bea, no pressure ah. This letter was more of a way for me to finally let these feelings out kasi medyo mabigat na rin dalhin minsan.<br><br>
+    And sana talaga hindi nito masira friendship natin. Ayoko naman na dahil lang dito eh maging awkward tayo or masira yung circle natin. Feel free parin to reach out anytime, anywhere — nandito naman ako lagi para makinig sa problems mo, lalo na sa mga love problems mo HAHAHA.<br><br>
+    Thank you for your time, and sana na-enjoy mo tong little project na ginawa ko para sayo.<br><br>
+    PS: Nung senior high ko pa talaga to plano gawin 😭. And nung nag-decide ako mag-ComSci, isa to sa mga bagay na gusto kong matutunang gawin. Kaya masaya ako na finally, nagawa ko at naipakita ko na siya sayo ngayon :))<br><br>
+    Love, Tora
+  `;
   document.getElementById("letterViewer").style.display = "flex";
 }
 
@@ -1394,10 +1414,10 @@ openGallery.onclick = () => {
   chat.classList.remove("active");
   musicPlayer.classList.remove("active");
   document.getElementById("libraryDropdown").style.display = "none";
-  document.getElementById("libraryHint").style.display = "none";
   openApp.classList.remove("zoomOut");
   openMusic.classList.remove("zoomOut");
 
+  galleryApp.parentElement.style.pointerEvents = "auto";
   bgGradient.className = "bg-gradient bg-gallery";
   home.classList.add("dimmed");
   home.style.pointerEvents = "none";
@@ -1406,6 +1426,7 @@ openGallery.onclick = () => {
 
 backToHomeGallery.onclick = () => {
   galleryApp.classList.remove("active");
+  galleryApp.parentElement.style.pointerEvents = "none";
   bgGradient.className = "bg-gradient";
   home.classList.remove("dimmed");
   home.style.pointerEvents = "auto";
@@ -1420,6 +1441,7 @@ volumeSlider.oninput = () => {
 ========================= */
 backToHomeMusic.onclick = () => {
   musicPlayer.classList.remove("active");
+  musicPlayer.parentElement.parentElement.style.pointerEvents = "none";
   document.getElementById("libraryDropdown").style.display = "none";
   bgGradient.className = "bg-gradient";
   home.classList.remove("dimmed");
