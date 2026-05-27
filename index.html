@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Private Message</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="overflow-hidden bg-rose-50 text-gray-800 touch-pan-y antialiased" data-theme="default">
+  
+  <div id="bg-gradient" class="fixed inset-0 z-0 pointer-events-none transition-colors duration-700 overflow-hidden">
+    <div id="orb-left" class="absolute top-[-10%] left-[-20%] w-[80vw] h-[80vw] max-w-[500px] rounded-full transition-colors duration-700 blur-[90px] opacity-60 md:opacity-40"></div>
+    <div id="orb-right" class="absolute bottom-[-10%] right-[-20%] w-[90vw] h-[90vw] max-w-[600px] rounded-full transition-colors duration-700 blur-[110px] opacity-50 md:opacity-30"></div>
+  </div>
+  <canvas id="particles" class="fixed inset-0 z-0 pointer-events-none opacity-60 mix-blend-screen"></canvas>
+
+  <div id="status-bar" class="fixed top-2 right-4 flex items-center gap-2 z-[9999] opacity-80 pointer-events-none transition-colors duration-500">
+    <span class="text-xs font-bold tracking-tighter">LTE</span>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="0.6" y="0.6" width="20.8" height="10.8" rx="2.4"/><path d="M23 4V8" stroke-linecap="round"/><rect x="2.5" y="2.5" width="14" height="7" rx="1" fill="currentColor"/></svg>
+  </div>
+
+  <div id="lockscreen" class="fixed inset-0 z-[1000] flex flex-col items-center justify-between py-24 transition-transform duration-500 ease-out select-none cursor-grab">
+    <div class="text-center">
+      <h1 id="lock-time" class="text-7xl font-extralight tracking-tighter">00:00</h1>
+      <p id="lock-date" class="text-xl font-medium mt-2">Monday, January 1</p>
+    </div>
+    <div class="flex flex-col items-center opacity-70 animate-bounce-slow">
+      <div class="w-3 h-3 border-l-2 border-t-2 border-rose-400 rotate-45 mb-4"></div>
+      <p class="font-medium">Swipe up to open</p>
+    </div>
+  </div>
+
+  <main id="main-interface" class="fixed inset-0 z-10 hidden flex-col items-center justify-center p-4">
+    
+    <div id="homescreen" class="grid grid-cols-3 gap-6 w-full max-w-sm transition-opacity duration-300">
+      <button onclick="App.open('messages')" class="app-icon-wrapper group outline-none">
+        <div class="app-icon shadow-rose-200">
+          <span class="text-4xl">💬</span>
+          <span class="absolute -top-1 -right-1 bg-rose-400 text-white text-[10px] font-bold w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">1</span>
+        </div>
+        <span class="text-xs font-medium text-gray-600 mt-2 block text-center">Messages</span>
+      </button>
+      
+      <button onclick="App.open('gallery')" class="app-icon-wrapper group outline-none">
+        <div class="app-icon shadow-orange-200">
+          <span class="text-4xl">🖼️</span>
+        </div>
+        <span class="text-xs font-medium text-gray-600 mt-2 block text-center">Gallery</span>
+      </button>
+
+      <button onclick="App.open('music')" class="app-icon-wrapper group outline-none">
+        <div class="app-icon shadow-indigo-200">
+          <span class="text-4xl">🎵</span>
+        </div>
+        <span class="text-xs font-medium text-gray-600 mt-2 block text-center">Music</span>
+      </button>
+    </div>
+
+    <div id="notification" onclick="App.open('messages')" class="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white/95 backdrop-blur p-3 rounded-2xl shadow-xl border border-rose-100 flex items-center gap-3 transition-all duration-500 cursor-pointer z-50">
+      <div class="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center text-xl">🐯</div>
+      <div>
+        <h4 class="font-bold text-sm text-gray-800">Tora</h4>
+        <p class="text-xs text-gray-500">1 new message from Tora</p>
+      </div>
+    </div>
+
+    <div id="app-messages" class="app-window bg-white">
+      <div class="app-header">
+        <button onclick="App.close()" class="text-rose-500 text-3xl pb-1 px-2">‹</button>
+        <div class="w-9 h-9 bg-rose-100 rounded-full flex items-center justify-center text-lg">🐯</div>
+        <div class="ml-2 leading-tight">
+          <h2 class="font-bold text-gray-800 text-sm">Tora</h2>
+          <span class="text-[10px] text-gray-500 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active now
+          </span>
+        </div>
+      </div>
+      
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-2">
+        <div id="typing-indicator" class="hidden w-fit bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-2 flex gap-1 items-center">
+          <div class="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce"></div>
+          <div class="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce delay-100"></div>
+          <div class="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce delay-200"></div>
+        </div>
+      </div>
+
+      <div id="chat-input-bar" class="p-3 border-t border-rose-50 hidden bg-white/90 backdrop-blur">
+        <div class="flex bg-gray-50 border border-rose-100 rounded-full px-4 py-2 shadow-inner">
+          <input type="text" id="user-input" placeholder="Put your reply here..." class="flex-1 bg-transparent outline-none text-sm" onkeypress="if(event.key === 'Enter') Chat.triggerWarning()">
+          <button onclick="Chat.triggerWarning()" class="text-rose-500 font-bold text-sm ml-2 hover:scale-110 transition-transform">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="app-gallery" class="app-window bg-orange-50/50">
+      <div class="app-header border-orange-100">
+        <button onclick="App.close()" class="text-orange-500 text-3xl pb-1 px-2">‹</button>
+        <div class="w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center text-lg">🖼️</div>
+        <div class="ml-2 leading-tight">
+          <h2 class="font-bold text-gray-800 text-sm">Gallery</h2>
+          <span class="text-[10px] text-gray-500">Our Moments</span>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4">
+        <div id="gallery-grid" class="grid grid-cols-2 gap-4 mb-8"></div>
+        <div class="text-center pb-8">
+          <button onclick="Gallery.openSecret()" class="bg-orange-400 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-orange-200 hover:-translate-y-1 transition-transform flex items-center gap-2 mx-auto">
+            <span>✉️</span> Open Letter
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="app-music" class="app-window bg-slate-900 border-none text-white shadow-2xl overflow-hidden flex flex-col">
+      <div class="p-4 flex items-center border-b border-white/10 justify-between shrink-0">
+        <div class="flex items-center">
+          <button onclick="App.close()" class="text-rose-400 text-3xl pb-1 px-2 mr-2">‹</button>
+          <div class="leading-tight">
+            <h2 class="font-bold text-sm">Music Player</h2>
+            <span id="music-status" class="text-[10px] text-rose-300">Paused</span>
+          </div>
+        </div>
+        <button onclick="Music.toggleLibrary()" class="w-10 h-8 bg-white/10 rounded-md border border-white/20 flex items-center justify-center text-xs">
+          📼
+        </button>
+      </div>
+
+      <div class="flex-1 flex flex-col items-center pt-8 pb-4 px-6 overflow-y-auto">
+        <div id="cassette-slot" class="w-full max-w-[280px] aspect-[1.6] bg-slate-950 rounded-xl border-4 border-slate-800 shadow-inner relative flex items-center justify-center overflow-hidden transition-all duration-500 cursor-pointer" onclick="Music.toggleLibrary()">
+            <div id="active-cassette" class="absolute w-[85%] h-[85%] bg-contain bg-center bg-no-repeat transition-transform duration-500 translate-y-full flex justify-around pt-[25%] opacity-0">
+                <div class="tape-wheel w-8 h-8 rounded-full border-[3px] border-dashed border-white/30"></div>
+                <div class="tape-wheel w-8 h-8 rounded-full border-[3px] border-dashed border-white/30"></div>
+            </div>
+            <p id="slot-hint" class="text-white/30 text-xs font-bold tracking-widest animate-pulse">TAP TO INSERT TAPE</p>
+        </div>
+
+        <h3 id="track-title" class="text-lg font-bold mt-6 text-center line-clamp-1 text-white shadow-rose-500 drop-shadow-md">Select a Track</h3>
+        <p id="track-artist" class="text-xs text-rose-300 mt-1 mb-6">---</p>
+
+        <div class="w-full max-w-[280px]">
+          <input type="range" id="progress-bar" value="0" class="w-full accent-rose-400 h-1 bg-white/20 rounded-full appearance-none">
+          <div class="flex justify-between text-[10px] text-gray-400 mt-2 font-mono">
+            <span id="time-current">0:00</span>
+            <span id="time-duration">0:00</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-8 mt-8">
+          <button onclick="Music.prev()" class="text-rose-400 hover:text-white transition-colors"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+          <button onclick="Music.togglePlay()" id="play-btn" class="w-16 h-16 rounded-full border-2 border-rose-400 flex items-center justify-center text-rose-400 hover:bg-rose-400 hover:text-slate-900 transition-colors shadow-[0_0_15px_rgba(251,113,133,0.3)]">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button onclick="Music.next()" class="text-rose-400 hover:text-white transition-colors"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"/></svg></button>
+        </div>
+      </div>
+
+      <div id="music-library" class="absolute bottom-0 left-0 right-0 h-[60%] bg-slate-800/95 backdrop-blur-md rounded-t-3xl border-t border-white/10 p-6 translate-y-full transition-transform duration-300 z-20 flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4 cursor-pointer" onclick="Music.toggleLibrary()"></div>
+        <h3 class="text-xs font-bold text-rose-400 uppercase tracking-widest text-center mb-4">Tape Rack</h3>
+        <div id="cassette-list" class="flex-1 overflow-y-auto grid grid-cols-2 gap-4 pb-4">
+          </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="modal-backdrop" class="fixed inset-0 bg-black/80 z-[60] hidden items-center justify-center backdrop-blur-sm p-4 opacity-0 transition-opacity" onclick="UI.closeModals()">
+    
+    <img id="modal-image" class="hidden max-w-full max-h-[85vh] rounded-xl shadow-2xl object-contain scale-90 transition-transform" onclick="event.stopPropagation()">
+    
+    <div id="modal-letter" class="hidden bg-orange-50 w-full max-w-sm p-8 rounded-3xl relative border border-orange-200 scale-90 transition-transform shadow-2xl" onclick="event.stopPropagation()">
+      <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-5xl drop-shadow-md">✉️</div>
+      <div id="letter-content" class="mt-4 text-gray-700 italic text-center text-sm leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar"></div>
+    </div>
+
+    <div id="modal-warning" class="hidden bg-white w-full max-w-sm p-6 rounded-3xl text-center scale-90 transition-transform shadow-2xl border-2 border-rose-200" onclick="event.stopPropagation()">
+      <div class="text-4xl mb-2">🚀</div>
+      <h3 class="font-extrabold text-rose-500 mb-2">Whoa, Heart-Stopper! 💖</h3>
+      <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+        Just a heads-up: you only get <strong>ONE</strong> shot at this reply. No take-backs!<br><br>Make it legendary. Are you 100% sure?
+      </p>
+      <div class="space-y-2">
+        <button onclick="Chat.confirmSend()" class="w-full bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold py-3 rounded-xl shadow-md hover:scale-[1.02] transition-transform">Yes, Send it! ✨</button>
+        <button onclick="UI.closeModals()" class="w-full bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">Wait, let me overthink... 🤔</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="sfx-pop" src="pop.mp3" preload="auto"></audio>
+  <audio id="sfx-tap" src="tap.mp3" preload="auto"></audio>
+  <audio id="music-player" preload="metadata"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
