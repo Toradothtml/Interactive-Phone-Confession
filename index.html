@@ -56,14 +56,6 @@ body {
   --c1: #581c87; --c2: #2e1065; --c3: #1e1b4b; --c4: #020617;
 }
 
-.cassette{
-  width: 180px;
-  height: 110px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-   
 @keyframes shift {
   0% { transform: scale(1); }
   100% { transform: scale(1.05); }
@@ -78,9 +70,11 @@ body {
 
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(10px, 4vw, 20px);
   padding: 20px;
+  width: 100%;
+  max-width: 400px;
 }
 
 /* app container */
@@ -94,14 +88,14 @@ body {
 
 /* home screen icon */
 .icon {
-  width: 90px;
-  height: 90px;
-  border-radius: 24px;
+   width: clamp(70px, 22vw, 90px);
+  height: clamp(70px, 22vw, 90px);
+  border-radius: clamp(18px, 5vw, 24px);
   background: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: clamp(30px, 8vw, 40px);
   box-shadow: 0 10px 30px rgba(251, 113, 133, 0.2);
   border: 1px solid rgba(251, 113, 133, 0.2);
   cursor: pointer;
@@ -139,8 +133,8 @@ body {
 }
 
 .cassette {
-  width: 140px;
-  height: 88px;
+  width: clamp(110px, 30vw, 140px);
+  height: clamp(70px, 19vw, 88px);
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -160,7 +154,7 @@ body {
   color: white;
   margin-top: 4px;
   text-align: center;
-  width: 140px;
+  width: clamp(110px, 30vw, 140px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -180,7 +174,7 @@ body {
 
 .app-name {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: #4b5563;
 }
 
@@ -203,9 +197,10 @@ body {
 
 /* messaging UI */
 .chat {
-  width: 100%;
+  width: 95%;
   max-width: 420px;
-  height: 80vh;
+  height: 85vh;
+  height: 85dvh; /* Better for mobile browsers */
   background: #ffffff; /* Removed backdrop-filter for performance */
   border: 1px solid rgba(251, 113, 133, 0.25);
   border-radius: 32px;
@@ -467,7 +462,7 @@ button:hover {
 }
 
 #lock-time {
-  font-size: 84px;
+  font-size: clamp(64px, 18vw, 84px);
   font-weight: 200;
   letter-spacing: -2px;
 }
@@ -476,6 +471,24 @@ button:hover {
   font-size: 22px;
   margin-top: -10px;
   font-weight: 400;
+}
+
+/* =========================
+   MOBILE RESPONSIVENESS
+========================= */
+@media (max-width: 850px) {
+  /* Stack the Player and Library vertically on mobile */
+  .music-container {
+    flex-direction: column !important;
+    gap: 15px !important;
+    overflow-y: auto; /* Allow scrolling if both are open */
+    padding: 20px 0;
+  }
+
+  #libraryDropdown {
+    width: 95% !important;
+    height: 60dvh !important; /* Library becomes a bit shorter on mobile */
+  }
 }
 
 .swipe-hint {
@@ -764,7 +777,7 @@ button:hover {
 
 <!-- MUSIC PLAYER APP -->
 <div class="app" style="pointer-events:none;">
-  <div style="display: flex; align-items: center; gap: 20px; pointer-events: none;">
+  <div class="music-container" style="display: flex; align-items: center; gap: 20px; pointer-events: none; width: 100%; justify-content: center; height: 100%;">
     <div class="chat" id="musicPlayer" style="position: relative; background: rgba(10, 15, 28, 0.95); border: 1px solid rgba(251, 113, 133, 0.3); color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.4);">
     <div class="header" style="border-bottom: 1px solid rgba(251, 113, 133, 0.2);">
       <div id="backToHomeMusic" style="cursor: pointer; margin-right: 10px; color: #db2777; font-size: 30px; line-height: 1; user-select: none;">‹</div>
@@ -774,15 +787,15 @@ button:hover {
         <div id="musicStatus" class="status" style="color: rgba(251, 113, 133, 0.8);">Paused</div>
       </div>
       <!-- Library Toggle Button -->
-      <div onclick="toggleLibrary()" style="margin-left: auto; width: 44px; height: 32px; background: url('CassetteLibrary.png') no-repeat center; background-size: contain; cursor: pointer; image-rendering: pixelated; transition: transform 0.2s;"></div>
+      <div onclick="toggleLibrary()" style="margin-left: auto; width: 48px; height: 36px; background: rgba(251, 113, 133, 0.15) url('CassetteLibrary.png') no-repeat center; background-size: 28px; border: 1px solid rgba(251, 113, 133, 0.3); border-radius: 10px; cursor: pointer; image-rendering: pixelated; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(251, 113, 133, 0.25) url(\'CassetteLibrary.png\') no-repeat center'; this.style.backgroundSize='28px'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(251, 113, 133, 0.15) url(\'CassetteLibrary.png\') no-repeat center'; this.style.backgroundSize='28px'; this.style.transform='scale(1)'"></div>
     </div>
     <div class="messages" style="display: flex; flex-direction: column; align-items: center; padding: 0; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;">
       <!-- Now Playing Section -->
       <div id="musicDropZone" style="width: 100%; padding: 20px 12px 24px; display: flex; flex-direction: column; align-items: center; border-bottom: 1px solid rgba(251, 113, 133, 0.2); background: linear-gradient(to bottom, rgba(251, 113, 133, 0.05), transparent); transition: background 0.3s;">
         <!-- The Cassette Slot Visual -->
-        <div style="width: 320px; height: 205px; background: #020617; border-radius: 24px; border: 4px solid #1e293b; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
+        <div style="max-width: 320px; width: 100%; aspect-ratio: 320/205; background: #020617; border-radius: 24px; border: 4px solid #1e293b; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
           <div style="position: absolute; inset: 0; background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.05) 55%, transparent 60%); pointer-events: none;"></div>
-          <div id="cassetteInPlayer" style="display: none; width: 280px; height: 175px; background-size: contain; background-repeat: no-repeat; background-position: center; transform: translateY(0); transition: transform 0.5s ease-in; position: relative; image-rendering: pixelated; z-index: 1;">
+          <div id="cassetteInPlayer" style="display: none; width: 87.5%; height: 85.3%; background-size: contain; background-repeat: no-repeat; background-position: center; transform: translateY(0); transition: transform 0.5s ease-in; position: relative; image-rendering: pixelated; z-index: 1;">
              <div style="display: flex; justify-content: space-around; padding-top: 80px;">
                <div class="cassette-wheel" style="width: 34px; height: 34px; border-radius: 50%; border: 4px dashed rgba(255,255,255,0.3); animation: rotate 3s linear infinite; animation-play-state: paused;"></div>
                <div class="cassette-wheel" style="width: 34px; height: 34px; border-radius: 50%; border: 4px dashed rgba(255,255,255,0.3); animation: rotate 3s linear infinite; animation-play-state: paused;"></div>
@@ -831,13 +844,8 @@ button:hover {
     </div>
   </div>
 
-    <!-- Floating Hint Outside the App -->
-    <div id="libraryHint" style="color: #fb7185; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; animation: fadePulse 2s infinite; pointer-events: none; margin-bottom: auto; margin-top: 24px; transform: rotate(-5deg); white-space: nowrap; display: none; transition: opacity 0.3s; text-shadow: 0 0 10px rgba(251, 113, 133, 0.5);">
-      ← Tap for more cassettes
-    </div>
-
     <!-- Cassette Library Side Panel (Tape Rack) -->
-    <div id="libraryDropdown" class="chat" style="display: none; width: 320px; height: 80vh; padding: 24px; position: relative; transform: translate3d(20px, 0, 0) scale(0.95); opacity: 0; pointer-events: auto; background: linear-gradient(165deg, #0f172a, #1e1b4b); border: 2px solid rgba(251, 113, 133, 0.4); box-shadow: 0 0 50px rgba(0,0,0,0.6); transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s ease;">
+    <div id="libraryDropdown" class="chat" style="display: none; width: min(320px, 95vw); height: 85vh; padding: 24px; position: relative; transform: translate3d(20px, 0, 0) scale(0.95); opacity: 0; pointer-events: auto; background: linear-gradient(165deg, #0f172a, #1e1b4b); border: 2px solid rgba(251, 113, 133, 0.4); box-shadow: 0 0 50px rgba(0,0,0,0.6); transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s ease;">
       <div style="text-align: center; margin-bottom: 24px;">
         <div style="font-size: 12px; font-weight: 900; color: #fb7185; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 15px rgba(251, 113, 133, 0.6);">Tape Rack</div>
         <div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 8px; font-weight: 600;">Drag a tape to the player slot</div>
@@ -1166,7 +1174,7 @@ openMusic.onclick = () => {
   home.classList.add("dimmed");
   home.style.pointerEvents = "none";
   musicPlayer.classList.add("active");
-  document.getElementById("libraryHint").style.display = "block";
+  toggleLibrary(); // Automatically open library when app starts
 };
 
 /* =========================
@@ -1218,10 +1226,8 @@ function renderPlaylist() {
 
 function toggleLibrary() {
   const dropdown = document.getElementById("libraryDropdown");
-  const hint = document.getElementById("libraryHint");
   if (dropdown.style.display === "none" || dropdown.style.display === "") {
     dropdown.style.display = "flex";
-    if (hint) hint.style.display = "none";
     setTimeout(() => {
       dropdown.style.transform = "translate3d(0, 0, 0) scale(1)";
       dropdown.style.opacity = "1";
@@ -1229,7 +1235,6 @@ function toggleLibrary() {
   } else {
     dropdown.style.transform = "translate3d(20px, 0, 0) scale(0.95)";
     dropdown.style.opacity = "0";
-    if (hint) hint.style.display = "block";
     setTimeout(() => dropdown.style.display = "none", 300);
   }
 }
@@ -1240,11 +1245,9 @@ function selectTrack(index) {
 
   // Close library dropdown if open
   const dropdown = document.getElementById("libraryDropdown");
-  const hint = document.getElementById("libraryHint");
   if (dropdown && dropdown.style.display !== "none") {
     dropdown.style.transform = "translate3d(20px, 0, 0) scale(0.95)";
     dropdown.style.opacity = "0";
-    if (hint) hint.style.display = "block";
     setTimeout(() => dropdown.style.display = "none", 300);
   }
   
@@ -1418,7 +1421,6 @@ volumeSlider.oninput = () => {
 backToHomeMusic.onclick = () => {
   musicPlayer.classList.remove("active");
   document.getElementById("libraryDropdown").style.display = "none";
-  document.getElementById("libraryHint").style.display = "none";
   bgGradient.className = "bg-gradient";
   home.classList.remove("dimmed");
   home.style.pointerEvents = "auto";
